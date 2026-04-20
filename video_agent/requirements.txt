@@ -1,0 +1,21 @@
+# Prime Land Solutions LLC — Video Editing Agent
+# Core AI
+anthropic>=0.40.0
+
+# Video editing
+moviepy==1.0.3
+imageio==2.34.0
+imageio-ffmpeg>=0.4.9
+
+# Image / caption rendering
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# Audio
+pydub>=0.25.1
+
+# Transcription (word-level captions)
+faster-whisper>=1.0.1
+
+# System requirement (must be installed separately):
+# ffmpeg — install via: sudo apt install ffmpeg  OR  brew install ffmpeg
