@@ -222,31 +222,71 @@ class WatermarkRenderer:
         clip = clip.set_mask(VideoClip(make_mask, ismask=True, duration=duration))
         return clip
 
-    def make_cta_card(self, website: str, duration: float = 3.0):
-        """End card with website CTA."""
+    def make_cta_card(self, website: str, cta_text: str = "",
+                      duration: float = 4.0):
+        """
+        End card with call-to-action.
+        Shows:  LINE 1 — company name (gold)
+                LINE 2 — cta_text e.g. "Get a Free Estimate" (white, large)
+                LINE 3 — website URL (gold, smaller)
+                LINE 4 — "Call us today!" prompt (white, small)
+        """
         from moviepy.editor import VideoClip
 
-        line1 = "VISIT US ONLINE"
-        line2 = website
+        company = BRAND["company"].upper()
+        action = cta_text or "Get a Free Estimate"
+        url = website
+        call = "CALL OR VISIT US TODAY"
 
         def make_frame(t: float) -> np.ndarray:
             img = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))
+            fade = min(1.0, t / 0.5)
+            alpha = int(fade * 235)
+
+            # Dark background panel
             bg = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))
             bg_draw = ImageDraw.Draw(bg)
-            fade = min(1.0, t / 0.5)
-            alpha = int(fade * 210)
-            bg_draw.rectangle([0, int(self.h * 0.35), self.w, int(self.h * 0.65)],
-                               fill=(26, 26, 26, alpha))
+            bg_draw.rounded_rectangle(
+                [int(self.w * 0.03), int(self.h * 0.30),
+                 int(self.w * 0.97), int(self.h * 0.72)],
+                radius=22,
+                fill=(15, 15, 15, alpha),
+            )
+            # Gold top accent bar
+            bg_draw.rectangle(
+                [int(self.w * 0.03), int(self.h * 0.30),
+                 int(self.w * 0.97), int(self.h * 0.30) + 6],
+                fill=_hex_to_rgba(BRAND["colors"]["primary"], alpha),
+            )
             img = Image.alpha_composite(img, bg)
             draw = ImageDraw.Draw(img)
-            f1 = _load_font(BRAND["font_size_watermark"])
-            f2 = _load_font(BRAND["font_size_cta"])
-            b1 = f1.getbbox(line1)
-            b2 = f2.getbbox(line2)
-            draw.text(((self.w - (b1[2] - b1[0])) // 2, int(self.h * 0.40)),
-                      line1, font=f1, fill=_hex_to_rgba("#FFFFFF", alpha))
-            draw.text(((self.w - (b2[2] - b2[0])) // 2, int(self.h * 0.48)),
-                      line2, font=f2, fill=_hex_to_rgba(BRAND["colors"]["primary"], alpha))
+
+            f_company = _load_font(BRAND["font_size_watermark"])
+            f_action  = _load_font(BRAND["font_size_cta"] + 6)
+            f_url     = _load_font(BRAND["font_size_watermark"] - 2)
+            f_call    = _load_font(BRAND["font_size_watermark"] - 6)
+
+            def draw_centred(text, font, y, color_hex, a=None):
+                a = a or alpha
+                bbox = font.getbbox(text)
+                tw = bbox[2] - bbox[0]
+                x = (self.w - tw) // 2
+                sw = 2
+                for dx in range(-sw, sw + 1):
+                    for dy in range(-sw, sw + 1):
+                        if dx == 0 and dy == 0:
+                            continue
+                        draw.text((x + dx, y + dy), text, font=font,
+                                  fill=(0, 0, 0, a))
+                draw.text((x, y), text, font=font,
+                          fill=_hex_to_rgba(color_hex, a))
+
+            base_y = int(self.h * 0.33)
+            draw_centred(company,  f_company, base_y,        BRAND["colors"]["primary"])
+            draw_centred(action,   f_action,  base_y + 46,   "#FFFFFF")
+            draw_centred(url,      f_url,     base_y + 108,  BRAND["colors"]["primary"])
+            draw_centred(call,     f_call,    base_y + 148,  "#CCCCCC", int(alpha * 0.75))
+
             return np.array(img)[:, :, :3]
 
         def make_mask(t: float) -> np.ndarray:

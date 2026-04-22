@@ -113,11 +113,15 @@ class VideoProcessor:
 
     def add_cta_end_card(self, clip: VideoFileClip,
                           website: str,
-                          cta_duration: float = 3.0) -> CompositeVideoClip:
+                          cta_text: str = "",
+                          cta_duration: float = 4.0) -> CompositeVideoClip:
         wm = WatermarkRenderer(self.out_w, self.out_h)
-        # CTA shows during the last cta_duration seconds
         start = max(0.0, clip.duration - cta_duration)
-        cta = wm.make_cta_card(website, cta_duration).set_start(start)
+        cta = wm.make_cta_card(
+            website=website,
+            cta_text=cta_text,
+            duration=cta_duration,
+        ).set_start(start)
         return CompositeVideoClip([clip, cta])
 
     # ------------------------------------------------------------------
@@ -130,6 +134,7 @@ class VideoProcessor:
         transcript: Optional[Transcript],
         music_path: Optional[str] = None,
         website: Optional[str] = None,
+        cta_text: str = "",
         use_ducking: bool = True,
     ) -> VideoFileClip:
         """
@@ -161,7 +166,7 @@ class VideoProcessor:
         # Step 5: branding
         final = self.add_intro_watermark(final)
         if website:
-            final = self.add_cta_end_card(final, website)
+            final = self.add_cta_end_card(final, website, cta_text=cta_text)
 
         # Step 6: music
         if use_ducking and transcript and music_path:

@@ -9,6 +9,18 @@ BRAND = {
         "drainage": "drainage.primelandsolutionsllc.com",
         "land_clearing": "landclearing.primelandsolutionsllc.com",
         "dirtwork": "dirtwork.primelandsolutionsllc.com",
+        # Trenching and excavation fall under dirtwork
+        "trenching": "dirtwork.primelandsolutionsllc.com",
+        "excavation": "dirtwork.primelandsolutionsllc.com",
+    },
+    # CTA text shown on end card per content type
+    "cta_text": {
+        "drainage": "Fix Your Drainage Problems",
+        "land_clearing": "Clear Your Land Today",
+        "dirtwork": "Get a Free Estimate",
+        "trenching": "Professional Trenching Services",
+        "excavation": "Excavation Done Right",
+        "default": "Get a Free Estimate",
     },
     "colors": {
         "primary": "#D4890A",    # earthy gold / heavy equipment yellow

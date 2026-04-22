@@ -202,6 +202,10 @@ TOOLS = [
                     "type": "string",
                     "description": "CTA website URL for end card.",
                 },
+                "cta_text": {
+                    "type": "string",
+                    "description": "Action text for end card e.g. 'Get a Free Estimate'. From choose_cta.",
+                },
                 "base_name": {
                     "type": "string",
                     "description": "Base filename for output files.",
@@ -322,18 +326,20 @@ def _choose_music(content_topic: str, platform: str, mood: str = "energetic") ->
         list(music_dir.glob("*.mp3")) + list(music_dir.glob("*.wav"))
     )
     recs = {
-        "drainage": "upbeat hip-hop or trap beat — shows precision and expertise",
-        "land clearing": "epic orchestral or aggressive rock — shows raw power",
+        "drainage": "upbeat hip-hop or trap beat — shows precision and technical expertise",
+        "land clearing": "epic orchestral or aggressive rock — shows raw power and scale",
+        "trenching": "heavy trap beat or hard rock — the machine cutting through ground is cinematic",
+        "excavation": "heavy trap beat or hard rock — big machines deserve big sound",
+        "gravel": "motivational country hip-hop — hardworking and relatable",
         "dirtwork": "motivational hip-hop — shows hustle and hard work",
-        "default": "energetic country rap or Southern hip-hop — relatable to the trade",
+        "default": "energetic Southern hip-hop or country rap — relatable to the trade",
     }
     topic_lower = content_topic.lower()
+    recommendation = recs["default"]
     for k, v in recs.items():
         if k in topic_lower:
             recommendation = v
             break
-    else:
-        recommendation = recs["default"]
 
     return {
         "recommendation": recommendation,
@@ -351,13 +357,22 @@ def _choose_music(content_topic: str, platform: str, mood: str = "energetic") ->
 def _choose_cta(content_topic: str) -> dict:
     topic_lower = content_topic.lower()
     websites = BRAND["websites"]
+    cta_texts = BRAND.get("cta_text", {})
+
     if "drainage" in topic_lower or "drain" in topic_lower:
-        url = websites["drainage"]
+        key = "drainage"
     elif "clearing" in topic_lower or "trees" in topic_lower or "brush" in topic_lower:
-        url = websites["land_clearing"]
+        key = "land_clearing"
+    elif "trench" in topic_lower:
+        key = "trenching"
+    elif "excavat" in topic_lower:
+        key = "excavation"
     else:
-        url = websites["dirtwork"]
-    return {"website": url, "content_topic": content_topic}
+        key = "dirtwork"
+
+    url = websites.get(key, websites["dirtwork"])
+    cta_text = cta_texts.get(key, cta_texts.get("default", "Get a Free Estimate"))
+    return {"website": url, "cta_text": cta_text, "content_topic": content_topic}
 
 
 def _render_video(
@@ -367,6 +382,7 @@ def _render_video(
     caption_style: str = "bold_bottom",
     music_path: Optional[str] = None,
     website: Optional[str] = None,
+    cta_text: str = "",
     base_name: str = "prime_land",
     use_ducking: bool = True,
     _transcript_cache: Optional[dict] = None,
@@ -407,6 +423,7 @@ def _render_video(
                 transcript=transcript,
                 music_path=music_path,
                 website=website,
+                cta_text=cta_text,
                 use_ducking=use_ducking and transcript is not None,
             )
             out_path = exporter.export(final_clip, platform, base_name)
@@ -561,6 +578,7 @@ Always:
                 caption_style=inputs.get("caption_style", "bold_bottom"),
                 music_path=inputs.get("music_path"),
                 website=inputs.get("website"),
+                cta_text=inputs.get("cta_text", ""),
                 base_name=inputs.get("base_name", "prime_land"),
                 use_ducking=inputs.get("use_ducking", True),
                 _transcript_cache=self._transcript_cache,
